@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2011 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -343,7 +343,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 			@Override
 			public void mouseClicked(MouseEvent e)
 			{
-				if (GUIUtilities.isRightButton(e.getModifiers()))
+				if (GenericGUIUtilities.isRightButton(e))
 				{
 					menu = new JPopupMenu();
 					JMenuItem refresh = new JMenuItem("refresh");
@@ -366,7 +366,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 						}
 					});
 					menu.add(refresh);
-					GUIUtilities.showPopupMenu(menu, indexes, e.getX(), e.getY());
+					GenericGUIUtilities.showPopupMenu(menu, indexes, e.getX(), e.getY());
 				}
 			}
 		});

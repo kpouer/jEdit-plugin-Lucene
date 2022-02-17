@@ -32,15 +32,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.SimpleCollector;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.store.FSDirectory;
 import org.gjt.sp.jedit.Buffer;
 import org.gjt.sp.jedit.EditBus;
@@ -171,8 +163,14 @@ public class CentralIndex extends AbstractIndex
 			searcher.search(new TermQuery(new Term("indexName", indexName)), new SimpleCollector()
 			{
 				@Override
-				public void setScorer(Scorer scorer)
+				public void setScorer(Scorable scorer)
 				{
+				}
+
+				@Override
+				public ScoreMode scoreMode()
+				{
+					return ScoreMode.COMPLETE;
 				}
 
 				@Override
@@ -188,12 +186,6 @@ public class CentralIndex extends AbstractIndex
 						Log.log(Log.ERROR, this, e);
 					}
 				}
-
-				@Override
-				public boolean needsScores()
-				{
-					return false;
-				}
 			});
 		}
 		catch (IOException e)
@@ -205,10 +197,10 @@ public class CentralIndex extends AbstractIndex
 
 	private static BooleanQuery getPathIndexQuery(String path, String indexName)
 	{
-		BooleanQuery query = new BooleanQuery();
-		query.add(new BooleanClause(new TermQuery(new Term("path", path)), BooleanClause.Occur.MUST));
-		query.add(new BooleanClause(new TermQuery(new Term("indexName", indexName)), BooleanClause.Occur.MUST));
-		return query;
+		return new BooleanQuery.Builder()
+			.add(new BooleanClause(new TermQuery(new Term("path", path)), BooleanClause.Occur.MUST))
+			.add(new BooleanClause(new TermQuery(new Term("indexName", indexName)), BooleanClause.Occur.MUST))
+			.build();
 	}
 
 	void removeFile(String path, String indexName)

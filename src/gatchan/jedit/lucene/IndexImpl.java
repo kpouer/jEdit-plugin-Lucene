@@ -2,7 +2,7 @@
  * :tabSize=4:indentSize=4:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2014 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -37,7 +38,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.util.Version;
 import org.gjt.sp.jedit.io.VFS;
 import org.gjt.sp.jedit.io.VFSFile;
 import org.gjt.sp.jedit.io.VFSFileFilter;
@@ -334,13 +334,14 @@ public class IndexImpl extends AbstractIndex implements Index
 		{
 			Query parsedQuery = parser.parse(query);
 
-			BooleanQuery _query = new BooleanQuery();
-			_query.add(parsedQuery, BooleanClause.Occur.MUST);
+			BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder()
+				.add(parsedQuery, BooleanClause.Occur.MUST);
 			if (!fileType.isEmpty())
 			{
-				_query.add(new TermQuery(new Term("filetype", fileType)), BooleanClause.Occur.MUST);
+				booleanQueryBuilder.add(new TermQuery(new Term("filetype", fileType)), BooleanClause.Occur.MUST);
 			}
-			_query.add(parsedQuery, BooleanClause.Occur.MUST);
+			booleanQueryBuilder.add(parsedQuery, BooleanClause.Occur.MUST);
+			BooleanQuery _query = booleanQueryBuilder.build();
 			TopDocs docs = searcher.search(_query, max);
 
 			ScoreDoc[] scoreDocs = docs.scoreDocs;

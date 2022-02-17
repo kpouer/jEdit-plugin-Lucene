@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2013 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -121,13 +121,13 @@ public class MarkerListQueryProcessor implements ResultProcessor
 				lineStart.add(sb.length());
 				sb.append(s);
 			}
-			Highlighter h = new Highlighter(sf, scorer);
-			h.setMaxDocCharsToAnalyze(sb.length());
+			Highlighter highlighter = new Highlighter(sf, scorer);
+			highlighter.setMaxDocCharsToAnalyze(sb.length());
 			String text = sb.toString();
 			TokenStream tokenStream = index.getAnalyzer().tokenStream("field", new StringReader(text));
-			h.getBestFragments(tokenStream, text, 0);
+			highlighter.getBestFragments(tokenStream, text, 0);
 		}
-		catch (Exception e)
+		catch (Throwable e)
 		{
 			Log.log(Log.ERROR, this, e);
 		}
