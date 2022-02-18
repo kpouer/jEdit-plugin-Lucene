@@ -75,6 +75,20 @@ public class TemporaryIndex implements Index
 	}
 
 	@Override
+	public int numDocs()
+	{
+		try
+		{
+			return DirectoryReader.open(directory).numDocs();
+		}
+		catch (IOException e)
+		{
+			Log.log(Log.ERROR, this, "Unable to get num docs", e);
+			return 0;
+		}
+	}
+
+	@Override
 	public void clear()
 	{
 		if (writer != null)

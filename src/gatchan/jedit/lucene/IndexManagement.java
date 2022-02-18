@@ -20,7 +20,11 @@
  */
 package gatchan.jedit.lucene;
 
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.store.FSDirectory;
 import org.gjt.sp.jedit.AbstractOptionPane;
+import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.ThreadUtilities;
 
@@ -106,6 +110,7 @@ public class IndexManagement extends AbstractOptionPane
 		private String indexName;
 
 		private final JButton delete;
+		private final JLabel documentCountLabel;
 		private final JButton reindex;
 
 		private IndexOptionPanel()
@@ -115,6 +120,7 @@ public class IndexManagement extends AbstractOptionPane
 			indexNameField = new JTextField();
 			indexNameField.setEditable(false);
 
+			documentCountLabel = new JLabel("");
 			delete = new JButton("Delete");
 			reindex = new JButton("Re-index");
 
@@ -138,6 +144,9 @@ public class IndexManagement extends AbstractOptionPane
 			layout.putConstraint(SpringLayout.WEST, reindex, 5, SpringLayout.EAST, delete);
 			layout.putConstraint(SpringLayout.NORTH, reindex, 10, SpringLayout.SOUTH, indexNameLabel);
 
+			// documentCountLabel
+			layout.putConstraint(SpringLayout.NORTH, documentCountLabel, 10, SpringLayout.SOUTH, delete);
+
 			delete.setEnabled(false);
 			reindex.setEnabled(false);
 
@@ -145,6 +154,7 @@ public class IndexManagement extends AbstractOptionPane
 			add(indexNameField);
 			add(delete);
 			add(reindex);
+			add(documentCountLabel);
 
 
 			ActionListener actionListener = new MyActionListener();
@@ -161,11 +171,16 @@ public class IndexManagement extends AbstractOptionPane
 			{
 				delete.setEnabled(false);
 				reindex.setEnabled(false);
+				documentCountLabel.setText("");
 			}
 			else
 			{
 				delete.setEnabled(true);
 				reindex.setEnabled(true);
+				Index index = LucenePlugin.instance.getIndex(indexName);
+				index.numDocs();
+				int num = index.numDocs();
+				documentCountLabel.setText(jEdit.getProperty("lucene.index.documentCountLabel.title", new String[] {Integer.toString(num)}));
 			}
 		}
 

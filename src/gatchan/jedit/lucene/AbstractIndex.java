@@ -42,7 +42,7 @@ import org.gjt.sp.util.Log;
 public abstract class AbstractIndex
 {
 	protected IndexWriter writer;
-	private DirectoryReader reader;
+	protected DirectoryReader reader;
 	protected File path;
 	protected Analyzer analyzer;
 	protected List<Index.ActivityListener> listeners = new CopyOnWriteArrayList<>();
@@ -117,7 +117,7 @@ public abstract class AbstractIndex
 	} //}}}
 
 	//{{{ initReader() method
-	private void initReader() throws IndexInterruptedException
+	protected void initReader() throws IndexInterruptedException
 	{
 		if (reader == null)
 		{

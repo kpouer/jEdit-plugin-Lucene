@@ -59,6 +59,7 @@ lucene.options.ShortLabels.label=Use short field labels
 lucene.options.CleanFileRegex=.*[:<>\\/|\\?\\*\\"\\\\]+.*
 
 
+lucene.index.documentCountLabel.title=Index has {0} documents
 lucene.index.locked.title=Index locked
 lucene.index.locked.message=The index at path {0} is locked.\n\
                             It can happens if another processus is currently using it\n\

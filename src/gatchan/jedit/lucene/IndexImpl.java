@@ -30,7 +30,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -82,6 +81,21 @@ public class IndexImpl extends AbstractIndex implements Index
 	{
 		return name;
 	} //}}}
+
+	@Override
+	public int numDocs()
+	{
+		try
+		{
+			initReader();
+			return reader.numDocs();
+		}
+		catch (IndexInterruptedException e)
+		{
+			Log.log(Log.ERROR, this, "Unable to get num docs", e);
+			return 0;
+		}
+	}
 
 	//{{{ startActivity() method
 	private void startActivity()

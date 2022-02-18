@@ -50,6 +50,8 @@ public interface Index
 
 	void clear() throws IndexInterruptedException;
 
+	int numDocs();
+
 	interface FileProvider
 	{
 		VFSFile next();
