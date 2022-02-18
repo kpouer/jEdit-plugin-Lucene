@@ -20,7 +20,6 @@
  */
 package gatchan.jedit.lucene;
 
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -101,7 +100,7 @@ public class MarkerListQueryProcessor implements ResultProcessor
 		Formatter sf = new SearchFormatter(positions, max);
 		QueryScorer scorer = new QueryScorer(query);
 		StringBuilder sb = new StringBuilder();
-		List<Integer> lineStart = new ArrayList<Integer>(500);
+		List<Integer> lineStart = new ArrayList<>(500);
 		BufferedReader br = null;
 		try
 		{

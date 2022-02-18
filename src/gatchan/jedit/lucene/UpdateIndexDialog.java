@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2011 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -108,7 +108,8 @@ public class UpdateIndexDialog extends JDialog
 				StringBuilder fileList = new StringBuilder();
 				try 
 				{
-					for (String fileName : LucenePlugin.CENTRAL.getAllDocuments(indexName)) {
+					for (String fileName : LucenePlugin.CENTRAL.getAllDocuments(indexName))
+					{
 						fileList.append(fileName);
 						fileList.append("\n");
 					}
@@ -133,58 +134,38 @@ public class UpdateIndexDialog extends JDialog
 				{
 					LucenePlugin.instance.removeIndex(indexName);
 					
-				    // getting exiting combo box model
-			        DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) indexList.getModel();
-			        
-			        // removing old data
-			        model.removeAllElements();
+			    	// getting exiting combo box model
+					DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) indexList.getModel();
 
-			        for (String item : LucenePlugin.instance.getIndexes()) {
-			            model.addElement(item);
-			        }
+					// removing old data
+					model.removeAllElements();
 
-			        // setting model with new data
-			        indexList.setModel(model);
+					for (String item : LucenePlugin.instance.getIndexes())
+						model.addElement(item);
+
+					// setting model with new data
+					indexList.setModel(model);
 					displayArea.setText("");
-				} 
-				catch (IndexInterruptedException e1) 
+				}
+				catch (IndexInterruptedException e1)
 				{
-					Log.log(Log.WARNING, this, "Halting due to Interrupt");	
+					Log.log(Log.WARNING, this, "Halting due to Interrupt");
 				}
 			
 			}
 		});
 
-		reIndex.addActionListener(new ActionListener()
+		reIndex.addActionListener(e ->
 		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				final int index = indexList.getSelectedIndex();
-				String indexName = indexList.getItemAt(index);
-				ReindexTask wr = new ReindexTask(indexName, new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						indexList.setSelectedIndex(index);
-					}
-				});
-				ThreadUtilities.runInBackground(wr);			
-			}
+			final int index = indexList.getSelectedIndex();
+			String indexName = indexList.getItemAt(index);
+			ReindexTask wr = new ReindexTask(indexName, () -> indexList.setSelectedIndex(index));
+			ThreadUtilities.runInBackground(wr);
 		});
 		
 		
 		KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
-		ActionListener cancelListener = new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent arg0)
-			{
-				delete.doClick();
-			}
-		};
-		rootPane.registerKeyboardAction(cancelListener, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
+		rootPane.registerKeyboardAction(arg0 -> delete.doClick(), stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
 		pack();
 		GUIUtilities.loadGeometry(this, GEOMETRY);
 	}

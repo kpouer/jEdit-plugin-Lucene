@@ -20,19 +20,14 @@
  */
 package gatchan.jedit.lucene;
 
-import gatchan.jedit.lucene.Index.ActivityListener;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Vector;
 import java.util.Collections;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -69,12 +64,15 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 	private final HistoryTextField searchField;
 	private final JTextField type;
 	private final JPanel mainPanel;
+	/**
+	 * This list contains String & FileMarker
+	 */
 	private final JList list;
 	private final JCheckBox lineResults;
 	private final JSpinner maxResults;
 	private final JCheckBox filterComments;
 	private final JCheckBox filterLiterals;
-	private final JComboBox indexes;
+	private final JComboBox<String> indexes;
 	private final MyModel model;
 	private final SourceLinkTree tree;
 	private final IndexComboBoxModel indexModel;
@@ -118,7 +116,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 		indexStatus = new JLabel();
 		String[] items = LucenePlugin.instance.getIndexes();
 		indexModel = new IndexComboBoxModel(items);
-		indexes = new JComboBox(indexModel);
+		indexes = new JComboBox<>(indexModel);
 		setIndexesToolTipText(null);
 		extendedOptions = new JCheckBox();
 		extendedOptions.setToolTipText(jEdit.getProperty("lucene.extendedoptions.tooltip"));
@@ -157,10 +155,10 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 				
 				private void removeIndexingTag(String indexName) 
 				{
-					List<String> items = new ArrayList<String>();
+					List<String> items = new ArrayList<>();
 					for (int i = 0; i < indexModel.getSize(); i++)
 					{
-						String modelName = (String) indexModel.getElementAt(i);
+						String modelName = indexModel.getElementAt(i);
 						if (modelName != CURRENT_BUFFER && modelName != ALL_BUFFERS) 
 						{
 							if (modelName.contains(indexName) && modelName.contains(MESSAGE_INDEXING_TAG))
@@ -180,10 +178,10 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 				
 				private void addIndexingTag(String indexName) 
 				{
-					List<String> items = new ArrayList<String>();
+					List<String> items = new ArrayList<>();
 					for (int i = 0; i < indexModel.getSize(); i++)
 					{
-						String modelName = (String) indexModel.getElementAt(i);
+						String modelName = indexModel.getElementAt(i);
 						if (modelName != CURRENT_BUFFER && modelName != ALL_BUFFERS) 
 						{
 							if (modelName.equals(indexName))
@@ -207,7 +205,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				Index index = null;
+				Index index;
 				try {
 					index = getSelectedIndex();
 				} 
@@ -240,7 +238,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 			searchField.setColumns(OptionPane.getSearchStringLength());
 		searchField.setToolTipText(jEdit.getProperty("lucene.search-string.tooltip"));
 
-		final MyActionListener actionListener = new MyActionListener();
+		final ActionListener actionListener = new MyActionListener();
 		searchField.addActionListener(actionListener);
 		type.addActionListener(actionListener);
 		clear = new RolloverButton(GUIUtilities.loadIcon(
@@ -257,14 +255,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 		});
 		multi = new RolloverButton();
 		multi.setToolTipText(jEdit.getProperty("hypersearch-results.multi.label"));
-		multi.addActionListener(new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				toggleMultiStatus();
-			}
-		});
+		multi.addActionListener(e -> toggleMultiStatus());
 		tree = new SourceLinkTree(v);
 		multiStatus = jEdit.getBooleanProperty("lucene.multipleresults", true);
 		updateMultiStatus();
@@ -318,14 +309,10 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 			setIndexesToolTipText((String) indexes.getSelectedItem());
 		}
 
-		maxResults.addChangeListener(new ChangeListener()
+		maxResults.addChangeListener(e ->
 		{
-			@Override
-			public void stateChanged(ChangeEvent e)
-			{
-				if (searchField.getText().length() != 0)
-					actionListener.actionPerformed(null);
-			}
+			if (!searchField.getText().isEmpty())
+				actionListener.actionPerformed(null);
 		});
 		addComponentListener(new ComponentAdapter()
 		{
@@ -338,32 +325,19 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 
 		indexes.addMouseListener(new MouseAdapter()
 		{
-			private JPopupMenu menu;
-
 			@Override
 			public void mouseClicked(MouseEvent e)
 			{
 				if (GenericGUIUtilities.isRightButton(e))
 				{
-					menu = new JPopupMenu();
+					JPopupMenu menu = new JPopupMenu();
 					JMenuItem refresh = new JMenuItem("refresh");
-					refresh.addActionListener(new ActionListener()
+					refresh.addActionListener(e12 ->
 					{
-						@Override
-						public void actionPerformed(ActionEvent e)
-						{
-							String selectedIndex = (String) indexes.getSelectedItem();
-							Task task = new ReindexTask(selectedIndex, new Runnable()
-							{
-								@Override
-								public void run()
-								{
-									indexes.setEnabled(true);
-								}
-							});
-							indexes.setEnabled(false);
-							ThreadUtilities.runInBackground(task);
-						}
+						String selectedIndex = (String) indexes.getSelectedItem();
+						Task task = new ReindexTask(selectedIndex, () -> indexes.setEnabled(true));
+						indexes.setEnabled(false);
+						ThreadUtilities.runInBackground(task);
 					});
 					menu.add(refresh);
 					GenericGUIUtilities.showPopupMenu(menu, indexes, e.getX(), e.getY());
@@ -601,7 +575,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 	@EBHandler
 	public void handleMessage(LuceneIndexUpdate msg)
 	{
-		Vector<String> items = new Vector<String>();
+		List<String> items = new ArrayList<>();
 		for (int i = 0; i < indexModel.getSize(); i++)
 		{
 			String indexName = (String) indexModel.getElementAt(i);
@@ -623,9 +597,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 			items.remove(cleanIndexName(indexName));
 		}
 		
-		String [] names = new String[items.size()];
-		items.toArray(names);
-		indexModel.setIndexes(names);
+		indexModel.setIndexes(items.toArray(StandardUtilities.EMPTY_STRING_ARRAY));
 		if (msg.getWhat() == LuceneIndexUpdate.What.CREATED)
 			indexes.setSelectedItem(indexName);
 	}
@@ -685,7 +657,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 		public List<Object> doInBackground() throws IndexInterruptedException {
 			Log.log(Log.NOTICE, this, "Search for " + text + " in file type: " + fileType);
 			ResultProcessor processor;
-			final List<Object> files = new ArrayList<Object>();
+			final List<Object> files = new ArrayList<>();
 			if (lineResult)
 				processor = new MarkerListQueryProcessor(index, files, max, tokenFilter);
 			else
@@ -711,7 +683,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 						FileMarker marker = (FileMarker) o;
 						if (marker.equals(prev))
 						{
-							Vector<FileMarker.Selection> selections = marker.getSelections();
+							Iterable<FileMarker.Selection> selections = marker.getSelections();
 							for (FileMarker.Selection selection: selections)
 								prev.addSelection(selection);
 						}
@@ -754,7 +726,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 
 	private static class MyModel extends AbstractListModel
 	{
-		private List<Object> files = new ArrayList<Object>();
+		private List<Object> files = new ArrayList<>();
 
 		public void setFiles(List<Object> files)
 		{
@@ -775,7 +747,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 		}
 	}
 
-	private static class IndexComboBoxModel extends AbstractListModel implements ComboBoxModel
+	private static class IndexComboBoxModel extends AbstractListModel<String> implements ComboBoxModel<String>
 	{
 		private String[] indexes;
 
@@ -794,7 +766,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 		}
 
 		@Override
-		public Object getElementAt(int index)
+		public String getElementAt(int index)
 		{
 			return indexes[index];
 		}
@@ -873,7 +845,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 				@Override
 				public void actionPerformed(ActionEvent e)
 				{
-					Vector<FileMarker> markers = parent.getFileMarkers(node);
+					Iterable<FileMarker> markers = parent.getFileMarkers(node);
 					for (FileMarker marker: markers)
 						MarkerSetsPlugin.toggleMarker(marker);
 				}
@@ -893,14 +865,14 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 		{
 			String search = searchField.getText().trim();
 			String fileType = type.getText().trim();
-			try {
+			try
+			{
 				search(search, fileType);
 			} 
 			catch (IndexInterruptedException e1) 
 			{
 				Log.log(Log.WARNING, this, "Indexing Halted by user");
 				Thread.currentThread().interrupt();
-				return;
 			}
 		}
 	}
@@ -911,7 +883,7 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 		searchField.requestFocusInWindow();
 	}
 	
-	private String cleanIndexName(String indexName)
+	private static String cleanIndexName(String indexName)
 	{
 		if (indexName.contains(MESSAGE_INDEXING_TAG)) {
 			indexName = indexName.replace(MESSAGE_INDEXING_TAG, "").trim();		
@@ -920,9 +892,8 @@ public class SearchResults extends JPanel implements DefaultFocusComponent
 		return indexName;
 	}
 
-	private String indexingIndexName(String indexName)
+	private static String indexingIndexName(String indexName)
 	{
 		return indexName + MESSAGE_INDEXING_TAG;
 	}
-
 }

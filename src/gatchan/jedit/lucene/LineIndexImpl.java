@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2013 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -52,7 +52,7 @@ public class LineIndexImpl extends IndexImpl
 	{
 		if (file.getPath() == null)
 			return;
-		Log.log(Log.DEBUG, this, "Index:"+getName() + " add " + file);
+		Log.log(Log.DEBUG, this, "Index:" + getName() + " add " + file);
 		BufferedReader reader = null;
 		try
 		{
@@ -66,6 +66,7 @@ public class LineIndexImpl extends IndexImpl
 			while ((line = reader.readLine()) != null)
 			{
 				Document doc = getEmptyDocument(file);
+				assert doc != null; // since file.getPath() is not null
 				i++;
 				doc.add(new StringField("line", String.valueOf(i), Field.Store.YES));
 				doc.add(new TextField("content", line, Field.Store.YES));

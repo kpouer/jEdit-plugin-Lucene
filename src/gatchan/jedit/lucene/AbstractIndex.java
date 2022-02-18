@@ -45,7 +45,7 @@ public abstract class AbstractIndex
 	protected DirectoryReader reader;
 	protected File path;
 	protected Analyzer analyzer;
-	protected List<Index.ActivityListener> listeners = new CopyOnWriteArrayList<>();
+	protected List<ActivityListener> listeners = new CopyOnWriteArrayList<>();
 
 	//{{{ AbstractIndex constructor
 	protected AbstractIndex(File path)
@@ -212,7 +212,7 @@ public abstract class AbstractIndex
 	} //}}}
 
 	//{{{ addActivityListener() method
-	public void addActivityListener(Index.ActivityListener al)
+	public void addActivityListener(ActivityListener al)
 	{
 		if (!listeners.contains(al))
 		{
@@ -221,7 +221,7 @@ public abstract class AbstractIndex
 	} //}}}
 
 	//{{{ removeActivityListener() method
-	public void removeActivityListener(Index.ActivityListener al)
+	public void removeActivityListener(ActivityListener al)
 	{
 		listeners.remove(al);
 	} //}}}

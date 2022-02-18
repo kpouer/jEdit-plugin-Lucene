@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2013 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -81,7 +81,6 @@ public class CentralIndex extends AbstractIndex
 							{
 								Log.log(Log.WARNING, this, "Indexing Halted by user");
 								Thread.currentThread().interrupt();
-								return;
 							}
 						}
 					});
@@ -157,7 +156,7 @@ public class CentralIndex extends AbstractIndex
 	List<String> getAllDocuments(String indexName) throws IndexInterruptedException
 	{
 		final IndexSearcher searcher = getSearcher();
-		final List<String> documents = new ArrayList<String>();
+		final List<String> documents = new ArrayList<>();
 		try
 		{
 			searcher.search(new TermQuery(new Term("indexName", indexName)), new SimpleCollector()

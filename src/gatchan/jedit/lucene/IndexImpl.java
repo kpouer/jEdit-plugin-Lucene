@@ -263,7 +263,6 @@ public class IndexImpl extends AbstractIndex implements Index
 						{
 							Log.log(Log.WARNING, this, "Indexing Halted by user");
 							Thread.currentThread().interrupt();
-							return;
 						}
 						finally
 						{

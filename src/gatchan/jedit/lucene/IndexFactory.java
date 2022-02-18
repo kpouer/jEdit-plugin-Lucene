@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2011 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -23,13 +23,15 @@ package gatchan.jedit.lucene;
 import java.util.HashMap;
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.util.Map;
 
 import org.gjt.sp.util.Log;
 
+import static org.gjt.sp.util.StandardUtilities.EMPTY_STRING_ARRAY;
+
 public class IndexFactory
 {
-	private static final HashMap<String, Class<? extends Index>> indexes =
-		new HashMap<String, Class<? extends Index>>();
+	private static final HashMap<String, Class<? extends Index>> indexes = new HashMap<>();
 
 	static
 	{
@@ -41,10 +43,10 @@ public class IndexFactory
 	public static String getType(Index index)
 	{
 		Class<? extends Index> c = index.getClass();
-		for (String type : indexes.keySet())
+		for (Map.Entry<String, Class<? extends Index>> entry : indexes.entrySet())
 		{
-			if (indexes.get(type) == c)
-				return type;
+			if (entry.getValue() == c)
+				return entry.getKey();
 		}
 		return null;
 	}
@@ -56,9 +58,7 @@ public class IndexFactory
 
 	public static String[] getIndexNames()
 	{
-		String[] names = new String[indexes.size()];
-		indexes.keySet().toArray(names);
-		return names;
+		return indexes.keySet().toArray(EMPTY_STRING_ARRAY);
 	}
 
 	public static Index createIndex(String type, String name, File path)

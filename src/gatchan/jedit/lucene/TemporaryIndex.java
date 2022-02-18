@@ -39,6 +39,7 @@ import org.apache.lucene.store.Directory;
 import org.gjt.sp.jedit.Buffer;
 import org.gjt.sp.jedit.MiscUtilities;
 import org.gjt.sp.jedit.jEdit;
+import org.gjt.sp.util.IOUtilities;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.ProgressObserver;
 
@@ -244,24 +245,13 @@ public class TemporaryIndex implements Index
 				}
 			}
 		}
-		catch (ParseException e)
-		{
-			Log.log(Log.ERROR, this, e, e);
-		}
-		catch (IOException e)
+		catch (ParseException | IOException e)
 		{
 			Log.log(Log.ERROR, this, e, e);
 		}
 		finally
 		{
-			try
-			{
-				directoryReader.close();
-			}
-			catch (IOException e)
-			{
-				Log.log(Log.ERROR, this, "Error while closing searcher", e);
-			}
+			IOUtilities.closeQuietly(directoryReader);
 		}
 	}
 
