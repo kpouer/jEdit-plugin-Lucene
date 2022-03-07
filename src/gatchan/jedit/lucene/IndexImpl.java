@@ -2,7 +2,7 @@
  * :tabSize=4:indentSize=4:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2014 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -37,7 +37,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.util.Version;
 import org.gjt.sp.jedit.io.VFS;
 import org.gjt.sp.jedit.io.VFSFile;
 import org.gjt.sp.jedit.io.VFSFileFilter;
@@ -82,6 +81,21 @@ public class IndexImpl extends AbstractIndex implements Index
 	{
 		return name;
 	} //}}}
+
+	@Override
+	public int numDocs()
+	{
+		try
+		{
+			initReader();
+			return reader.numDocs();
+		}
+		catch (IndexInterruptedException e)
+		{
+			Log.log(Log.ERROR, this, "Unable to get num docs", e);
+			return 0;
+		}
+	}
 
 	//{{{ startActivity() method
 	private void startActivity()
@@ -249,7 +263,6 @@ public class IndexImpl extends AbstractIndex implements Index
 						{
 							Log.log(Log.WARNING, this, "Indexing Halted by user");
 							Thread.currentThread().interrupt();
-							return;
 						}
 						finally
 						{
@@ -334,13 +347,14 @@ public class IndexImpl extends AbstractIndex implements Index
 		{
 			Query parsedQuery = parser.parse(query);
 
-			BooleanQuery _query = new BooleanQuery();
-			_query.add(parsedQuery, BooleanClause.Occur.MUST);
+			BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder()
+				.add(parsedQuery, BooleanClause.Occur.MUST);
 			if (!fileType.isEmpty())
 			{
-				_query.add(new TermQuery(new Term("filetype", fileType)), BooleanClause.Occur.MUST);
+				booleanQueryBuilder.add(new TermQuery(new Term("filetype", fileType)), BooleanClause.Occur.MUST);
 			}
-			_query.add(parsedQuery, BooleanClause.Occur.MUST);
+			booleanQueryBuilder.add(parsedQuery, BooleanClause.Occur.MUST);
+			BooleanQuery _query = booleanQueryBuilder.build();
 			TopDocs docs = searcher.search(_query, max);
 
 			ScoreDoc[] scoreDocs = docs.scoreDocs;

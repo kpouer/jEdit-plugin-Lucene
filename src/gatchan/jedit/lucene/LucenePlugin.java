@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2012 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -30,14 +30,7 @@ import org.gjt.sp.jedit.io.VFSFile;
 import org.gjt.sp.jedit.io.VFSManager;
 import org.gjt.sp.jedit.msg.PluginUpdate;
 import org.gjt.sp.jedit.textarea.JEditTextArea;
-import org.gjt.sp.util.IOUtilities;
-import org.gjt.sp.util.Log;
-
-import gatchan.jedit.lucene.Index.FileProvider;
-
-import org.gjt.sp.util.ProgressObserver;
-import org.gjt.sp.util.Task;
-import org.gjt.sp.util.ThreadUtilities;
+import org.gjt.sp.util.*;
 
 import javax.swing.*;
 
@@ -48,6 +41,7 @@ import java.util.regex.Pattern;
 
 import projectviewer.ProjectViewer;
 
+import static org.gjt.sp.util.StandardUtilities.EMPTY_STRING_ARRAY;
 
 /**
  * @author Matthieu Casanova
@@ -331,11 +325,8 @@ public class LucenePlugin extends EditPlugin
 		dlg.setVisible(true);
 
 		Log.log(Log.DEBUG, this, "After Update index");
-		return;
 	}
 
-	
-	
 	/*
 	 * Open the new index dialog.
 	 * Returns the name of the new index, or null if cancelled.
@@ -412,7 +403,6 @@ public class LucenePlugin extends EditPlugin
 				{
 					Log.log(Log.WARNING, this, "Indexing Halted by user");
 					Thread.currentThread().interrupt();
-					return;
 				}
 			}
 		};
@@ -427,23 +417,16 @@ public class LucenePlugin extends EditPlugin
 	{
 		File home = getPluginHome();
 		File indexFolder = new File(home, "indexes");
-		File[] indexes = indexFolder.listFiles(new FileFilter()
-		{
-			@Override
-			public boolean accept(File pathname)
-			{
-				return pathname.isDirectory();
-			}
-		});
+		File[] indexes = indexFolder.listFiles(File::isDirectory);
 
 		if (indexes == null || indexes.length == 0)
 			return new String[0];
-		List<String> names = new ArrayList<String>(indexes.length);
+		List<String> names = new ArrayList<>(indexes.length);
 		for (File index : indexes)
 		{
 			names.add(index.getName());
 		}
-		return names.toArray(new String[names.size()]);
+		return names.toArray(EMPTY_STRING_ARRAY);
 	}
 
 	private File getIndexFile(String name)

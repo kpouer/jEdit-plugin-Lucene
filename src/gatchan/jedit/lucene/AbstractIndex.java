@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2013 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -27,17 +27,12 @@ import java.nio.channels.ClosedByInterruptException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.swing.JOptionPane;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.Version;
-import org.gjt.sp.jedit.GUIUtilities;
-import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.Log;
 //}}}
 
@@ -47,10 +42,10 @@ import org.gjt.sp.util.Log;
 public abstract class AbstractIndex
 {
 	protected IndexWriter writer;
-	private DirectoryReader reader;
+	protected DirectoryReader reader;
 	protected File path;
 	protected Analyzer analyzer;
-	protected List<Index.ActivityListener> listeners = new CopyOnWriteArrayList<Index.ActivityListener> ();
+	protected List<ActivityListener> listeners = new CopyOnWriteArrayList<>();
 
 	//{{{ AbstractIndex constructor
 	protected AbstractIndex(File path)
@@ -94,17 +89,17 @@ public abstract class AbstractIndex
 
 			path.mkdirs();
 			FSDirectory directory = FSDirectory.open(path.toPath());
-			if (IndexWriter.isLocked(directory))
-			{
-				Log.log(Log.WARNING, this, "The lucene index at " + path + " is locked");
-				int ret = GUIUtilities.confirm(jEdit.getActiveView(), "lucene.index.locked",
-				                               new Object[]{path}, JOptionPane.YES_NO_OPTION,
-				                               JOptionPane.ERROR_MESSAGE);
-				if (ret == JOptionPane.YES_OPTION)
-				{
-					//IndexWriter.unlock(directory);
-				}
-			}
+//			if (IndexWriter.isLocked(directory))
+//			{
+//				Log.log(Log.WARNING, this, "The lucene index at " + path + " is locked");
+//				int ret = GUIUtilities.confirm(jEdit.getActiveView(), "lucene.index.locked",
+//				                               new Object[]{path}, JOptionPane.YES_NO_OPTION,
+//				                               JOptionPane.ERROR_MESSAGE);
+//				if (ret == JOptionPane.YES_OPTION)
+//				{
+//					//IndexWriter.unlock(directory);
+//				}
+//			}
 			IndexWriterConfig indexWriterConfig = new IndexWriterConfig(getAnalyzer());
 			writer = new IndexWriter(directory, indexWriterConfig);
 		}
@@ -122,7 +117,7 @@ public abstract class AbstractIndex
 	} //}}}
 
 	//{{{ initReader() method
-	private void initReader() throws IndexInterruptedException
+	protected void initReader() throws IndexInterruptedException
 	{
 		if (reader == null)
 		{
@@ -217,7 +212,7 @@ public abstract class AbstractIndex
 	} //}}}
 
 	//{{{ addActivityListener() method
-	public void addActivityListener(Index.ActivityListener al)
+	public void addActivityListener(ActivityListener al)
 	{
 		if (!listeners.contains(al))
 		{
@@ -226,7 +221,7 @@ public abstract class AbstractIndex
 	} //}}}
 
 	//{{{ removeActivityListener() method
-	public void removeActivityListener(Index.ActivityListener al)
+	public void removeActivityListener(ActivityListener al)
 	{
 		listeners.remove(al);
 	} //}}}

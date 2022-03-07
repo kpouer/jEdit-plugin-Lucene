@@ -20,8 +20,6 @@
  */
 package gatchan.jedit.lucene;
 
-import gatchan.jedit.lucene.Index.FileProvider;
-
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collection;

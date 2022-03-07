@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2011 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -21,15 +21,12 @@
 package gatchan.jedit.lucene;
 
 import org.gjt.sp.jedit.AbstractOptionPane;
+import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.ThreadUtilities;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 /**
  * @author Matthieu Casanova
@@ -38,8 +35,8 @@ import java.awt.event.ActionEvent;
 public class IndexManagement extends AbstractOptionPane
 {
 	private IndexOptionPanel indexOptionPanel;
-	private DefaultListModel model;
-	private JList indexList;
+	private DefaultListModel<String> model;
+	private JList<String> indexList;
 
 	public IndexManagement()
 	{
@@ -50,23 +47,17 @@ public class IndexManagement extends AbstractOptionPane
 	@Override
 	protected void _init()
 	{
-		model = new DefaultListModel();
-		indexList = new JList(model);
+		model = new DefaultListModel<>();
+		indexList = new JList<>(model);
 		JScrollPane leftScroll = new JScrollPane(indexList);
 		indexOptionPanel = new IndexOptionPanel();
 		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftScroll, indexOptionPanel);
 		indexList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		indexList.getSelectionModel().addListSelectionListener(new ListSelectionListener()
+		indexList.getSelectionModel().addListSelectionListener(e ->
 		{
-			@Override
-			public void valueChanged(ListSelectionEvent e)
-			{
-				int row = e.getFirstIndex();
-				if (row > -1)
-				{
-					indexOptionPanel.setIndex((String) indexList.getSelectedValue());
-				}
-			}
+			int row = e.getFirstIndex();
+			if (row > -1)
+				indexOptionPanel.setIndex(indexList.getSelectedValue());
 		});
 
 		add(split);
@@ -106,6 +97,7 @@ public class IndexManagement extends AbstractOptionPane
 		private String indexName;
 
 		private final JButton delete;
+		private final JLabel documentCountLabel;
 		private final JButton reindex;
 
 		private IndexOptionPanel()
@@ -115,6 +107,7 @@ public class IndexManagement extends AbstractOptionPane
 			indexNameField = new JTextField();
 			indexNameField.setEditable(false);
 
+			documentCountLabel = new JLabel("");
 			delete = new JButton("Delete");
 			reindex = new JButton("Re-index");
 
@@ -138,6 +131,9 @@ public class IndexManagement extends AbstractOptionPane
 			layout.putConstraint(SpringLayout.WEST, reindex, 5, SpringLayout.EAST, delete);
 			layout.putConstraint(SpringLayout.NORTH, reindex, 10, SpringLayout.SOUTH, indexNameLabel);
 
+			// documentCountLabel
+			layout.putConstraint(SpringLayout.NORTH, documentCountLabel, 10, SpringLayout.SOUTH, delete);
+
 			delete.setEnabled(false);
 			reindex.setEnabled(false);
 
@@ -145,11 +141,35 @@ public class IndexManagement extends AbstractOptionPane
 			add(indexNameField);
 			add(delete);
 			add(reindex);
+			add(documentCountLabel);
 
 
-			ActionListener actionListener = new MyActionListener();
-			delete.addActionListener(actionListener);
-			reindex.addActionListener(actionListener);
+			delete.addActionListener(e ->
+			{
+				try
+				{
+					Log.log(Log.NOTICE, this, "Delete " + indexName + " asked");
+					LucenePlugin.instance.removeIndex(indexName);
+					updateListModel();
+					Log.log(Log.NOTICE, this, "Delete " + indexName + " DONE");
+				}
+				catch (IndexInterruptedException ex)
+				{
+					Log.log(Log.WARNING, this, "Halting due to Interrupt");
+				}
+			});
+			reindex.addActionListener(e ->
+			{
+				indexList.setEnabled(false);
+				reindex.setEnabled(false);
+				delete.setEnabled(false);
+				ReindexTask wr = new ReindexTask(indexName, () ->
+				{
+					setIndex(indexName);
+					indexList.setEnabled(true);
+				});
+				ThreadUtilities.runInBackground(wr);
+			});
 
 		}
 
@@ -161,58 +181,16 @@ public class IndexManagement extends AbstractOptionPane
 			{
 				delete.setEnabled(false);
 				reindex.setEnabled(false);
+				documentCountLabel.setText("");
 			}
 			else
 			{
 				delete.setEnabled(true);
 				reindex.setEnabled(true);
-			}
-		}
-
-		private class MyActionListener implements ActionListener
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				try
-				{
-					if (e.getSource() == delete)
-					{
-						Log.log(Log.NOTICE, this, "Delete " + indexName + " asked");
-							LucenePlugin.instance.removeIndex(indexName);
-						updateListModel();
-						Log.log(Log.NOTICE, this, "Delete " + indexName + " DONE");
-					}
-					else if (e.getSource() == reindex)
-					{
-						indexList.setEnabled(false);
-						reindex.setEnabled(false);
-						delete.setEnabled(false);
-						ReindexTask wr = new ReindexTask(indexName, new GUIEnabledRunnable(indexName));
-						ThreadUtilities.runInBackground(wr);
-					}
-				} 
-				catch (IndexInterruptedException e1) 
-				{
-					Log.log(Log.WARNING, this, "Halting due to Interrupt");					
-				}
-			}
-		}
-
-		private class GUIEnabledRunnable implements Runnable
-		{
-			private final String indexName;
-
-			private GUIEnabledRunnable(String indexName)
-			{
-				this.indexName = indexName;
-			}
-
-			@Override
-			public void run()
-			{
-				setIndex(indexName);
-				indexList.setEnabled(true);
+				Index index = LucenePlugin.instance.getIndex(indexName);
+				index.numDocs();
+				int num = index.numDocs();
+				documentCountLabel.setText(jEdit.getProperty("lucene.index.documentCountLabel.title", new String[] {Integer.toString(num)}));
 			}
 		}
 	}

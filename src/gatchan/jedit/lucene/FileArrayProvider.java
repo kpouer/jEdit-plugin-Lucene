@@ -22,8 +22,6 @@ package gatchan.jedit.lucene;
 
 import org.gjt.sp.jedit.io.VFSFile;
 
-import gatchan.jedit.lucene.Index.FileProvider;
-
 public class FileArrayProvider implements FileProvider
 {
 	private final VFSFile[] fileArray;

@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2013 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -64,7 +64,6 @@ class ReindexTask extends Task
 					{
 						Log.log(Log.WARNING, this, "Indexing Halted by user");
 						Thread.currentThread().interrupt();
-						return;
 					}
 					finally
 					{

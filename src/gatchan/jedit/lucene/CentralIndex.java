@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2013 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -32,15 +32,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.SimpleCollector;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.store.FSDirectory;
 import org.gjt.sp.jedit.Buffer;
 import org.gjt.sp.jedit.EditBus;
@@ -89,7 +81,6 @@ public class CentralIndex extends AbstractIndex
 							{
 								Log.log(Log.WARNING, this, "Indexing Halted by user");
 								Thread.currentThread().interrupt();
-								return;
 							}
 						}
 					});
@@ -165,14 +156,20 @@ public class CentralIndex extends AbstractIndex
 	List<String> getAllDocuments(String indexName) throws IndexInterruptedException
 	{
 		final IndexSearcher searcher = getSearcher();
-		final List<String> documents = new ArrayList<String>();
+		final List<String> documents = new ArrayList<>();
 		try
 		{
 			searcher.search(new TermQuery(new Term("indexName", indexName)), new SimpleCollector()
 			{
 				@Override
-				public void setScorer(Scorer scorer)
+				public void setScorer(Scorable scorer)
 				{
+				}
+
+				@Override
+				public ScoreMode scoreMode()
+				{
+					return ScoreMode.COMPLETE;
 				}
 
 				@Override
@@ -188,12 +185,6 @@ public class CentralIndex extends AbstractIndex
 						Log.log(Log.ERROR, this, e);
 					}
 				}
-
-				@Override
-				public boolean needsScores()
-				{
-					return false;
-				}
 			});
 		}
 		catch (IOException e)
@@ -205,10 +196,10 @@ public class CentralIndex extends AbstractIndex
 
 	private static BooleanQuery getPathIndexQuery(String path, String indexName)
 	{
-		BooleanQuery query = new BooleanQuery();
-		query.add(new BooleanClause(new TermQuery(new Term("path", path)), BooleanClause.Occur.MUST));
-		query.add(new BooleanClause(new TermQuery(new Term("indexName", indexName)), BooleanClause.Occur.MUST));
-		return query;
+		return new BooleanQuery.Builder()
+			.add(new BooleanClause(new TermQuery(new Term("path", path)), BooleanClause.Occur.MUST))
+			.add(new BooleanClause(new TermQuery(new Term("indexName", indexName)), BooleanClause.Occur.MUST))
+			.build();
 	}
 
 	void removeFile(String path, String indexName)

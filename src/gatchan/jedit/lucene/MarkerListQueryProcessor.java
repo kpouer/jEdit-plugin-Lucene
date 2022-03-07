@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2013 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -19,7 +19,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 package gatchan.jedit.lucene;
-
 
 import java.io.*;
 import java.util.ArrayList;
@@ -101,7 +100,7 @@ public class MarkerListQueryProcessor implements ResultProcessor
 		Formatter sf = new SearchFormatter(positions, max);
 		QueryScorer scorer = new QueryScorer(query);
 		StringBuilder sb = new StringBuilder();
-		List<Integer> lineStart = new ArrayList<Integer>(500);
+		List<Integer> lineStart = new ArrayList<>(500);
 		BufferedReader br = null;
 		try
 		{
@@ -121,13 +120,13 @@ public class MarkerListQueryProcessor implements ResultProcessor
 				lineStart.add(sb.length());
 				sb.append(s);
 			}
-			Highlighter h = new Highlighter(sf, scorer);
-			h.setMaxDocCharsToAnalyze(sb.length());
+			Highlighter highlighter = new Highlighter(sf, scorer);
+			highlighter.setMaxDocCharsToAnalyze(sb.length());
 			String text = sb.toString();
 			TokenStream tokenStream = index.getAnalyzer().tokenStream("field", new StringReader(text));
-			h.getBestFragments(tokenStream, text, 0);
+			highlighter.getBestFragments(tokenStream, text, 0);
 		}
-		catch (Exception e)
+		catch (Throwable e)
 		{
 			Log.log(Log.ERROR, this, e);
 		}

@@ -21,7 +21,6 @@
 package gatchan.jedit.lucene;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.gjt.sp.jedit.io.VFSFile;
 import org.gjt.sp.util.ProgressObserver;
 
 /**
@@ -50,11 +49,7 @@ public interface Index
 
 	void clear() throws IndexInterruptedException;
 
-	interface FileProvider
-	{
-		VFSFile next();
-		int size();
-	}
+	int numDocs();
 
 	/**
 	 * Add several files to an index
@@ -74,11 +69,6 @@ public interface Index
 	 */
 	void search(String query, String fileType, int max, ResultProcessor processor) throws IndexInterruptedException;
 
-	interface ActivityListener
-	{
-		void indexingStarted(Index index);
-		void indexingEnded(Index index);
-	}
 	void addActivityListener(ActivityListener activityListener);
 	void removeActivityListener(ActivityListener activityListener);
 	boolean isChanging();

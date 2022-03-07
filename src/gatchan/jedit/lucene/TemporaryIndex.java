@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2013 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -34,12 +34,12 @@ import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
+import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
-import org.apache.lucene.util.Version;
 import org.gjt.sp.jedit.Buffer;
 import org.gjt.sp.jedit.MiscUtilities;
 import org.gjt.sp.jedit.jEdit;
+import org.gjt.sp.util.IOUtilities;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.ProgressObserver;
 
@@ -63,7 +63,7 @@ public class TemporaryIndex implements Index
 	{
 		this.name = name;
 		analyzer = new StandardAnalyzer();
-		directory = new RAMDirectory();
+		directory = new ByteBuffersDirectory();
 		try
 		{
 			IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
@@ -72,6 +72,20 @@ public class TemporaryIndex implements Index
 		catch (IOException e)
 		{
 			Log.log(Log.ERROR, this, e);
+		}
+	}
+
+	@Override
+	public int numDocs()
+	{
+		try
+		{
+			return DirectoryReader.open(directory).numDocs();
+		}
+		catch (IOException e)
+		{
+			Log.log(Log.ERROR, this, "Unable to get num docs", e);
+			return 0;
 		}
 	}
 
@@ -90,7 +104,7 @@ public class TemporaryIndex implements Index
 				Log.log(Log.ERROR, this, e);
 			}
 		}
-		directory = new RAMDirectory();
+		directory = new ByteBuffersDirectory();
 		try
 		{
 			IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
@@ -207,13 +221,15 @@ public class TemporaryIndex implements Index
 		{
 			Query parsedQuery = parser.parse(query);
 
-			BooleanQuery _query = new BooleanQuery();
-			_query.add(parsedQuery, BooleanClause.Occur.MUST);
+			BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder()
+				.add(parsedQuery, BooleanClause.Occur.MUST);
+
 			if (!fileType.isEmpty())
 			{
-				_query.add(new TermQuery(new Term("filetype", fileType)), BooleanClause.Occur.MUST);
+				queryBuilder.add(new TermQuery(new Term("filetype", fileType)), BooleanClause.Occur.MUST);
 			}
-			_query.add(parsedQuery, BooleanClause.Occur.MUST);
+			queryBuilder.add(parsedQuery, BooleanClause.Occur.MUST);
+			BooleanQuery _query = queryBuilder.build();
 			TopDocs docs = searcher.search(_query, max);
 
 			ScoreDoc[] scoreDocs = docs.scoreDocs;
@@ -229,24 +245,13 @@ public class TemporaryIndex implements Index
 				}
 			}
 		}
-		catch (ParseException e)
-		{
-			Log.log(Log.ERROR, this, e, e);
-		}
-		catch (IOException e)
+		catch (ParseException | IOException e)
 		{
 			Log.log(Log.ERROR, this, e, e);
 		}
 		finally
 		{
-			try
-			{
-				directoryReader.close();
-			}
-			catch (IOException e)
-			{
-				Log.log(Log.ERROR, this, "Error while closing searcher", e);
-			}
+			IOUtilities.closeQuietly(directoryReader);
 		}
 	}
 

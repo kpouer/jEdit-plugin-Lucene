@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2013 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -32,9 +32,11 @@ import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.util.Version;
 
+import static org.apache.lucene.analysis.en.EnglishAnalyzer.ENGLISH_STOP_WORDS_SET;
+
 public class AnalyzerFactory
 {
-	private static final Map<String, Analyzer> analyzers = new HashMap<String, Analyzer>();
+	private static final Map<String, Analyzer> analyzers = new HashMap<>();
 
 	static
 	{
@@ -43,7 +45,7 @@ public class AnalyzerFactory
 		analyzers.put("Java identifier", new SourceCodeAnalyzer());
 		analyzers.put("Whitespace", new WhitespaceAnalyzer());
 		analyzers.put("Keyword", new KeywordAnalyzer());
-		analyzers.put("Stop", new StopAnalyzer());
+		analyzers.put("Stop", new StopAnalyzer(ENGLISH_STOP_WORDS_SET));
 	}
 
 	static void dispose()

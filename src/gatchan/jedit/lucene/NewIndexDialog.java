@@ -2,7 +2,7 @@
  * :tabSize=8:indentSize=8:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright (C) 2009, 2011 Matthieu Casanova
+ * Copyright (C) 2009, 2022 Matthieu Casanova
  * Copyright (C) 2009, 2011 Shlomy Reinstein
  *
  * This program is free software; you can redistribute it and/or
@@ -130,25 +130,10 @@ public class NewIndexDialog extends JDialog
 				}
 			}
 		});
-		cancel.addActionListener(new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				setVisible(false);
-			}
-		});
+		cancel.addActionListener(e -> setVisible(false));
 
 		KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
-		ActionListener cancelListener = new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent arg0)
-			{
-				cancel.doClick();
-			}
-		};
-		rootPane.registerKeyboardAction(cancelListener, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
+		rootPane.registerKeyboardAction(arg0 -> cancel.doClick(), stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
 		pack();
 		GUIUtilities.loadGeometry(this, GEOMETRY);
 	}
